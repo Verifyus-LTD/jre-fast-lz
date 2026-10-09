@@ -34,7 +34,7 @@ router_config:
   create: false
   name: $routers:hub/hybrid-connectivity-router
 ncc_spoke_config:
-  hub: $ncc_hubs:hub
+  hub: $ncc_hubs:placard-ncc-hub
 bgp_peer:
   custom_advertise:
     all_subnets: true
