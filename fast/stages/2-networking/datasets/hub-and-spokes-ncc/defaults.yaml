@@ -29,6 +29,7 @@ context:
       - 172.16.0.0/12
       - 192.168.0.0/16
   locations:
+    primary: europe-west2
     london: europe-west2
     new-york: us-east1
     los-angeles: us-west2
