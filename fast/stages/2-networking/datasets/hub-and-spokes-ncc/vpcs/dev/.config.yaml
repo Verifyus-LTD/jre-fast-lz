@@ -22,8 +22,8 @@ nat_config:
   nat-primary:
     region: $locations:primary
 ncc_config:
-  hub: $ncc_hubs:hub
-  group: $ncc_groups:hub/default
+  hub: $ncc_hubs:placard-ncc-hub
+  group: $ncc_groups:placard-ncc-hub/default
 routes:
   default:
     dest_range: 0.0.0.0/0
