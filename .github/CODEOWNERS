@@ -9,12 +9,14 @@
 
 # Standard Project Factory / Teams Folder Configuration
 /fast/stages/2-project-factory/datasets/classic/folders/naeu-department/ @Mother-London/mother-london-it
-/fast/stages/2-project-factory/datasets/classic/folders/naeu-department/lon-team/ @Mother-London/mother-london-it
-/fast/stages/2-project-factory/datasets/classic/folders/naeu-department/ny-team/ @ny-team-admins @cloud-foundation-admins
+/fast/stages/2-project-factory/datasets/classic/folders/naeu-department/lon-team/ @Verifyus-LTD/placard-NY-fabric-Nonprod
+/fast/stages/2-project-factory/datasets/classic/folders/naeu-department/ny-team/  @Verifyus-LTD/placard-NY-fabric-Nonprod
 
 # Team Project Definitions in Project Factory
-/fast/stages/2-project-factory/datasets/classic/projects/lon-* @Mother-London/mother-london-it
-/fast/stages/2-project-factory/datasets/classic/projects/ny-* @ny-team-admins @cloud-foundation-admins
+# 1. London Projects - Handled by a local team mapping the London group
+/fast/stages/2-project-factory/datasets/classic/projects/lon-* @Verifyus-LTD/placard-NY-fabric-Nonprod @Mother-London/mother-london-it
+# 2. New York Projects - Correctly prefixed with the host organization
+/fast/stages/2-project-factory/datasets/classic/projects/ny-* @Verifyus-LTD/placard-NY-fabric-Nonprod @Mother-London/mother-london-it
 
 # Sensitive Terraform / Fabric Module Definitions
 /modules/organization/ @Mother-London/mother-london-it
