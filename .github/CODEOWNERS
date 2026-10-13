@@ -2,22 +2,22 @@
 * @Mother-London/mother-london-it
 
 # Core FAST Stages (Admin-Only Access)
-/fast/stages/0-org-setup/ @Mother-London/mother-london-it
-/fast/stages/1-vpcsc/ @Mother-London/mother-london-it
-/fast/stages/2-networking/ @Mother-London/mother-london-it
-/fast/stages/2-security/ @Mother-London/mother-london-it
+/fast/stages/0-org-setup/ @Verifyus-LTD/mother-london-it
+/fast/stages/1-vpcsc/ @Verifyus-LTD/mother-london-it
+/fast/stages/2-networking/ @Verifyus-LTD/mother-london-it
+/fast/stages/2-security/ @Verifyus-LTD/mother-london-it
 
 # Standard Project Factory / Teams Folder Configuration
-/fast/stages/2-project-factory/datasets/classic/folders/naeu-department/ @Mother-London/mother-london-it
+/fast/stages/2-project-factory/datasets/classic/folders/naeu-department/ @@Verifyus-LTD/mother-london-it
 /fast/stages/2-project-factory/datasets/classic/folders/naeu-department/lon-team/ @Verifyus-LTD/placard-NY-fabric-Nonprod
 /fast/stages/2-project-factory/datasets/classic/folders/naeu-department/ny-team/  @Verifyus-LTD/placard-NY-fabric-Nonprod
 
 # Team Project Definitions in Project Factory
 # 1. London Projects - Handled by a local team mapping the London group
-/fast/stages/2-project-factory/datasets/classic/projects/lon-* @Verifyus-LTD/placard-NY-fabric-Nonprod @Mother-London/mother-london-it
+/fast/stages/2-project-factory/datasets/classic/projects/lon-* @Verifyus-LTD/placard-NY-fabric-Nonprod @Verifyus-LTD/mother-london-it
 # 2. New York Projects - Correctly prefixed with the host organization
-/fast/stages/2-project-factory/datasets/classic/projects/ny-* @Verifyus-LTD/placard-NY-fabric-Nonprod @Mother-London/mother-london-it
+/fast/stages/2-project-factory/datasets/classic/projects/ny-* @Verifyus-LTD/placard-NY-fabric-Nonprod @Verifyus-LTD/mother-london-it
 
 # Sensitive Terraform / Fabric Module Definitions
-/modules/organization/ @Mother-London/mother-london-it
-/modules/vpc-sc/ @Mother-London/mother-london-it
+/modules/organization/ @Verifyus-LTD/mother-london-it
+/modules/vpc-sc/ @Verifyus-LTD/mother-london-it
