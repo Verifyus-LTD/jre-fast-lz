@@ -13,7 +13,7 @@
 /fast/stages/2-project-factory/datasets/classic/folders/naeu-department/ny-team/ @Verifyus-LTD/placard-ny-fabric-nonprod
 
 # Project factory: project definitions
-/fast/stages/2-project-factory/datasets/classic/projects/lon-* @Verifyus-LTD/placard-ny-fabric-nonprod @Verifyus-LTD/mother-london-it
+/fast/stages/2-project-factory/datasets/classic/projects/lon-* @Verifyus-LTD/mother-london-it
 /fast/stages/2-project-factory/datasets/classic/projects/ny-* @Verifyus-LTD/placard-ny-fabric-nonprod @Verifyus-LTD/mother-london-it
 
 # Sensitive Terraform / Fabric module definitions
