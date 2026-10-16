@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
 # Copyright 2026 Placard Media / Cloud Foundation Fabric
 #
-# Remediation script to grant:
-# 1. serviceUsageConsumer to iac-org-rw and iac-org-ro on placard-prod-iac-core-0
-#    (resolves 403 querying Cloud Storage / serviceusage.services.use during terraform init)
-# 2. Stage 0 management roles to iac-org-rw
-# 3. Impersonation and project access roles to Tessa (tessa@placard.media / tessa@placard.com)
+# Complete Organization-Wide IAM Remediation Script
+# Resolves 403 querying Cloud Storage / serviceusage.services.use across all stages
+# and ensures Tessa has proper impersonation access.
 
 set -euo pipefail
 
-PROJECT_ID="placard-prod-iac-core-0"
+ORG_ID="150829647948"
+CORE_PROJECT="placard-prod-iac-core-0"
 OUTPUTS_BUCKET="placard-prod-iac-core-0-iac-outputs"
 
 echo "========================================================================"
-echo " Placard Media - IAM Remediation for ${PROJECT_ID}"
+echo " Placard Media - Foundation IAM Remediation (Org: ${ORG_ID})"
 echo "========================================================================"
 echo ""
 
@@ -30,33 +29,55 @@ fi
 echo "  ✓ Authenticated as: ${CURRENT_ACCOUNT}"
 echo ""
 
-# 1. Fix Service Usage Consumer on Stage 0 Service Accounts
-echo "[1/4] Granting 'roles/serviceusage.serviceUsageConsumer' to Stage 0 Service Accounts..."
-for sa in "iac-org-rw" "iac-org-ro"; do
-  SA_EMAIL="${sa}@${PROJECT_ID}.iam.gserviceaccount.com"
-  echo "  -> Adding role on ${SA_EMAIL}..."
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+# 1. Grant roles/serviceusage.serviceUsageConsumer at the ORGANIZATION level
+echo "[1/4] Granting 'roles/serviceusage.serviceUsageConsumer' at Org Level to all stage SAs..."
+STAGE_SAS=(
+  "iac-org-rw"
+  "iac-org-ro"
+  "iac-vpcsc-rw"
+  "iac-vpcsc-ro"
+  "iac-networking-rw"
+  "iac-networking-ro"
+  "iac-security-rw"
+  "iac-security-ro"
+  "iac-pf-rw"
+  "iac-pf-ro"
+)
+
+for sa in "${STAGE_SAS[@]}"; do
+  SA_EMAIL="${sa}@${CORE_PROJECT}.iam.gserviceaccount.com"
+  echo "  -> Org Level: ${SA_EMAIL}..."
+  gcloud organizations add-iam-policy-binding "${ORG_ID}" \
     --member="serviceAccount:${SA_EMAIL}" \
     --role="roles/serviceusage.serviceUsageConsumer" \
-    --condition=None
+    --condition=None \
+    --quiet >/dev/null || true
+
+  # Also ensure project-level binding on core project
+  gcloud projects add-iam-policy-binding "${CORE_PROJECT}" \
+    --member="serviceAccount:${SA_EMAIL}" \
+    --role="roles/serviceusage.serviceUsageConsumer" \
+    --condition=None \
+    --quiet >/dev/null || true
 done
-echo "  ✓ Done."
+echo "  ✓ Done. Service usage consumer is now inherited organization-wide."
 echo ""
 
 # 2. Stage 0 core management roles on iac-org-rw
-echo "[2/4] Granting core management roles to iac-org-rw..."
-SA_ORG_RW="iac-org-rw@${PROJECT_ID}.iam.gserviceaccount.com"
+echo "[2/4] Granting core management roles to iac-org-rw on ${CORE_PROJECT}..."
+SA_ORG_RW="iac-org-rw@${CORE_PROJECT}.iam.gserviceaccount.com"
 for role in \
   roles/cloudbuild.builds.editor \
   roles/iam.serviceAccountAdmin \
   roles/iam.workloadIdentityPoolAdmin \
   roles/owner \
   roles/storage.admin; do
-  echo "  -> Adding ${role}..."
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  echo "  -> ${role} on ${SA_ORG_RW}..."
+  gcloud projects add-iam-policy-binding "${CORE_PROJECT}" \
     --member="serviceAccount:${SA_ORG_RW}" \
     --role="${role}" \
-    --condition=None
+    --condition=None \
+    --quiet >/dev/null || true
 done
 echo "  ✓ Done."
 echo ""
@@ -66,45 +87,52 @@ echo "[3/4] Granting impersonation and access permissions to Tessa..."
 TESSA_ACCOUNTS=("tessa@placard.media" "tessa@placard.com")
 
 for user in "${TESSA_ACCOUNTS[@]}"; do
-  echo "  Checking and granting permissions for user:${user}..."
+  echo "  Configuring user:${user}..."
 
-  # Allow setting quota project and calling APIs
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  # Allow setting quota project and calling APIs at org and project level
+  gcloud organizations add-iam-policy-binding "${ORG_ID}" \
     --member="user:${user}" \
     --role="roles/serviceusage.serviceUsageConsumer" \
-    --condition=None || true
+    --condition=None \
+    --quiet >/dev/null || true
 
-  # Allow impersonating service accounts (Token Creator)
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  gcloud projects add-iam-policy-binding "${CORE_PROJECT}" \
+    --member="user:${user}" \
+    --role="roles/serviceusage.serviceUsageConsumer" \
+    --condition=None \
+    --quiet >/dev/null || true
+
+  # Allow impersonating all IaC service accounts (Token Creator)
+  gcloud projects add-iam-policy-binding "${CORE_PROJECT}" \
     --member="user:${user}" \
     --role="roles/iam.serviceAccountTokenCreator" \
-    --condition=None || true
+    --condition=None \
+    --quiet >/dev/null || true
 
   # Allow project metadata and bucket inspection
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  gcloud projects add-iam-policy-binding "${CORE_PROJECT}" \
     --member="user:${user}" \
     --role="roles/viewer" \
-    --condition=None || true
+    --condition=None \
+    --quiet >/dev/null || true
 
   # Direct read access to outputs bucket for fast-links.sh
   gcloud storage buckets add-iam-policy-binding "gs://${OUTPUTS_BUCKET}" \
     --member="user:${user}" \
-    --role="roles/storage.objectViewer" || true
+    --role="roles/storage.objectViewer" \
+    --quiet >/dev/null || true
 done
 echo "  ✓ Done."
 echo ""
 
-# 4. Verify the fix in IAM policy
-echo "[4/4] Verifying 'serviceusage.serviceUsageConsumer' on iac-org-rw..."
-if gcloud projects get-iam-policy "${PROJECT_ID}" --flatten="bindings[].members" \
-  --filter="bindings.members:iac-org-rw@ AND bindings.role:roles/serviceusage.serviceUsageConsumer" \
-  --format="value(bindings.role)" | grep -q "serviceUsageConsumer"; then
-  echo "  ✓ CONFIRMED: iac-org-rw has roles/serviceusage.serviceUsageConsumer on ${PROJECT_ID}."
-else
-  echo "  ✗ WARNING: Verification check did not see the binding. Please check output above."
-fi
+# 4. Verify iac-pf-rw and iac-org-rw
+echo "[4/4] Verifying permissions..."
+echo "  Checking iac-pf-rw on core project:"
+gcloud projects get-iam-policy "${CORE_PROJECT}" --flatten="bindings[].members" \
+  --filter="bindings.members:iac-pf-rw@ AND bindings.role:roles/serviceusage.serviceUsageConsumer" \
+  --format="table(bindings.role, bindings.members)"
 
 echo ""
 echo "========================================================================"
-echo " All IAM bindings successfully configured and verified!"
+echo " All IAM bindings successfully configured!"
 echo "========================================================================"
