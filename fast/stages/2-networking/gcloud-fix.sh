@@ -44,22 +44,12 @@ gcloud services enable logging.googleapis.com --project="placard-prod-net-core-0
 gcloud services enable logging.googleapis.com --project="placard-prod-net-spoke-0"
 gcloud services enable logging.googleapis.com --project="placard-dev-net-spoke-0"
 
-# Import already existing projects into Terraform state to resolve 409 Already Exists errors
-# This happens because the projects were partially created on Google Cloud before the billing quota errored out,
-# preventing the state from saving. This adopts them cleanly back into the Terraform state.
-echo "--------------------------------------------------------"
-echo "Cleaning existing project and legacy network records from state..."
-echo "--------------------------------------------------------"
-terraform state rm 'module.projects.module.projects["net-core-0"].google_project.project[0]' || true
-terraform state rm 'module.projects.module.projects["net-dev-0"].google_project.project[0]' || true
-terraform state rm 'module.projects.module.projects["net-prod-0"].google_project.project[0]' || true
-
-# Clean up legacy Belgium/VPC Peering Router NATs and Routers from state
+# Clean up legacy Belgium/VPC Peering Router NATs and Routers from state if needed
 # This resolves the connection-refused/location-policy-violated errors caused by the deleted europe-west1 resources
-terraform state rm 'module.vpc-factory.google_compute_router_nat.default["dev/nat-primary"]' || true
-terraform state rm 'module.vpc-factory.google_compute_router_nat.default["prod/nat-primary"]' || true
-terraform state rm 'module.vpc-factory.google_compute_router.default["dev/nat-primary"]' || true
-terraform state rm 'module.vpc-factory.google_compute_router.default["prod/nat-primary"]' || true
+terraform state rm 'module.vpc-factory.google_compute_router_nat.default["dev/nat-primary"]' 2>/dev/null || true
+terraform state rm 'module.vpc-factory.google_compute_router_nat.default["prod/nat-primary"]' 2>/dev/null || true
+terraform state rm 'module.vpc-factory.google_compute_router.default["dev/nat-primary"]' 2>/dev/null || true
+terraform state rm 'module.vpc-factory.google_compute_router.default["prod/nat-primary"]' 2>/dev/null || true
 
 echo "--------------------------------------------------------"
 echo "Checking if we need to import existing projects into Terraform state..."
