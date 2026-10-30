@@ -46,16 +46,19 @@ done
 echo "Adding billing.admin role on billing account 011375-A0472C-432D72..."
 gcloud billing accounts add-iam-policy-binding "011375-A0472C-432D72" --member "$FAST_PRINCIPAL" --role "roles/billing.admin"
 
-# 5. Setup a Quota-Tracking Project (If starting fresh)
-# To prevent failures related to API usage limits/quota tracking
-# when managing Org Policies, ensure your active gcloud
-# configuration points to a billing-enabled project with the
-# necessary APIs enabled:
+# 5. Setup Quota-Tracking Project
+# Use the permanent core IaC project (placard-prod-iac-core-0) if it exists,
+# otherwise fallback to bootstrap project.
+CORE_PROJECT="placard-prod-iac-core-0"
 
-# Set a default project for quota tracking
-echo "Setting default project for quota tracking..."
-gcloud config set project intrepid-fiber-506711-j5
+if gcloud projects describe "${CORE_PROJECT}" &>/dev/null; then
+  echo "Setting quota project to core IaC project: ${CORE_PROJECT}..."
+  gcloud config set project "${CORE_PROJECT}"
+  gcloud auth application-default set-quota-project "${CORE_PROJECT}" --quiet 2>/dev/null || true
+else
+  echo "Core project not yet created. Using bootstrap project for initial setup..."
+  gcloud config set project intrepid-fiber-506711-j5
+  gcloud services enable bigquery.googleapis.com cloudbilling.googleapis.com cloudresourcemanager.googleapis.com essentialcontacts.googleapis.com iam.googleapis.com logging.googleapis.com orgpolicy.googleapis.com serviceusage.googleapis.com
+fi
 
-# Enable prerequisite APIs in that project
-echo "Enabling prerequisite APIs..."
-gcloud services enable bigquery.googleapis.com cloudbilling.googleapis.com cloudresourcemanager.googleapis.com essentialcontacts.googleapis.com iam.googleapis.com logging.googleapis.com orgpolicy.googleapis.com serviceusage.googleapis.com
+echo "JRE bootstrap completed successfully."
